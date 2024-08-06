@@ -42,8 +42,10 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
+      return
 		} else {
 			app.serverError(w, r, err)
+      return
 		}
 	}
 
