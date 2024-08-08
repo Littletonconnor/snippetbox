@@ -3,9 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
-	"text/template"
 
 	"snippetbox.connorlittleton.net/internal/models"
 )
@@ -13,21 +13,31 @@ import (
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Go")
 
-	files := []string{
-		"./ui/html/base.tmpl",
-		"./ui/html/partials/nav.tmpl",
-		"./ui/html/pages/home.tmpl",
-	}
+  snippets, err := app.snippets.Latest()
+  if err != nil {
+    app.serverError(w, r, err)
+    return 
+  }
 
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+  for _, snippet := range snippets {
+    fmt.Fprint(w, "%+v\n", snippet)
+  }
 
-	err = ts.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+	// files := []string{
+	// 	"./ui/html/base.tmpl",
+	// 	"./ui/html/partials/nav.tmpl",
+	// 	"./ui/html/pages/home.tmpl",
+	// }
+	//
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// }
+	//
+	// err = ts.ExecuteTemplate(w, "base", nil)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// }
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +59,27 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Fprintf(w, "%+v", snippet)
+  files := []string{
+    "./ui/html/base.tmpl",
+    "./ui/html/partials/nav.tmpl",
+    "./ui/html/pages/view.tmpl",
+  }
+
+  ts, err := template.ParseFiles(files...)
+  if err != nil {
+    app.serverError(w, r, err)
+    return
+  }
+
+  data := templateData{
+    Snippet: snippet,
+  }
+
+  err = ts.ExecuteTemplate(w, "base", data)
+  if err != nil {
+    app.serverError(w, r, err)
+  }
+
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
